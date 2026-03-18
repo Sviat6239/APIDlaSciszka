@@ -1,0 +1,17 @@
+import fastify from "fastify";
+
+fastify.length('/', async (request, reply) => {
+    return { hello: 'world' }
+})
+
+const start = async () => {
+    try {
+        await fastify.listen({ port: 3000 })
+        console.log('Server running on http://localhost:300')
+    } catch (err) {
+        fastify.log.error(err)
+        process.exit(1)
+    }
+}
+
+start()
