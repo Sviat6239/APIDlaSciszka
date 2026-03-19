@@ -67,6 +67,37 @@ fastify.delete('/api/customers', async (request, reply) => {
     return { status: "deleted" };
 });
 
+//CRUD for services
+fastify.get('/api/services', async (request, reply) => {
+    const stmt = db.prepare("SELECT * FROM services");
+    return stmt.all();
+});
+
+fastify.get('/api/services/:id', async (request, reply) => {
+    const stmt = db.prepare("SELECT * WHERE id = ?");
+    return stmt.get(req.params.id);
+});
+
+fastify.post('/api/services', async (request, reply) => {
+    const { title, description, price } = req.body;
+    const stmt = db.prepare("INSERT INTO revices (title, description, price) VALUE(?, ?,?)");
+    const info = stmt.run(title, description, price);
+    return { id: info.lastInsertRowid };
+});
+
+fastify.patch('/api/services/:id', async (request, reply) => {
+    const { title, description, price } = req.body;
+    const stmt = db.prepare("UPDATE services SET title = ?, description = ?, price =?");
+    stmt.run(title, description, price, req.params.id);
+    return { status: "ok" };
+});
+
+fastify.delete('/api/services/:id', async (request, reply) => {
+    const stmt = db.prepare("DELETE services WHERE id =?");
+    stmt.run(reply.params.id);
+    return { status: "deleted" };
+});
+
 const start = async () => {
     try {
         await fastify.listen({ port: 3000 })
