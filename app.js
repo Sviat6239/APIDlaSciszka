@@ -98,10 +98,51 @@ fastify.delete('/api/services/:id', async (request, reply) => {
     return { status: "deleted" };
 });
 
+//CRUD for products
+fastify.get('/api/products', async (request, reply) => {
+    const stmt = db.prepare("SELECT * FROM products");
+    return stmt.all();
+});
+
+fastify.get('/api/products/:id', async (request, reply) => {
+    const stmt = db.prepare("SELECT * WHERE id = ?");
+    return stmt.get(req.params.id);
+});
+
+fastify.get('/api/products/:service_id', async (request, reply) => {
+    const stmt = db.prepare("SELECT * WHERE service_id = ?");
+    return stmt.get(params.services);
+});
+
+fastify.get('/api/products/:customer_id', async (request, reply) => {
+    const stmt = db.prepare("SELECT * WHERE customer_id = ?");
+    return stmt.get(params.customer_id);
+});
+
+fastify.post('/api/products', async (request, reply) => {
+    const { service_id, title, description, customer_id } = req.body;
+    const stmt = db.prepare("INSERT INTO products (service_id, title, description, customer_id) VALUE(?, ?, ?, ?)");
+    const info = stmt.run(service_id, title, description, customer_id);
+    return { id: info.lastInsertRowid };
+});
+
+fastify.patch('/api/products/:id', async (request, reply) => {
+    const { service_id, title, description, customer_id } = req.body;
+    const stmt = db.prepare("UPDATE products SET service_id = ?, title = ?, description = ?, customer_id = ?");
+    stmt.run(service_id, title, description, customer_id, req.params.id);
+    return { status: "ok" };
+});
+
+fastify.delete('/api/products/:id', async (request, reply) => {
+    const stmt = db.prepare("DELETE products WHERE id =?");
+    stmt.run(reply.params.id);
+    return { status: "deleted" };
+})
+
 const start = async () => {
     try {
         await fastify.listen({ port: 3000 })
-        console.log('Server running on http://localhost:300)')
+        console.log('Server running on http://localhost:3000)')
     } catch (err) {
         fastify.log.error(err)
         process.exit(1)

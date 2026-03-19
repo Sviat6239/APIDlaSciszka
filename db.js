@@ -37,7 +37,9 @@ CREATE TABLE IF NOT EXISTS products(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     service_id INTEGER,
     title TEXT NOT NULL,
-    description TEXT NOT NULL
+    description TEXT NOT NULL,
+    customer_id INEGER NOT NULL,
+    FOREIGN KEY(customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS media(
