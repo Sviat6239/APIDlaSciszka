@@ -13,26 +13,26 @@ fastify.get('/api/admins', async (request, reply) => {
 
 fastify.get('/api/admins/:id', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM admins WHERE id = ?");
-    return stmt.get(req.params.id);
+    return stmt.get(request.params.id);
 });
 
 fastify.post('/api/admin', async (request, reply) => {
-    const { login, password } = req.body;
+    const { login, password } = request.body;
     const stmt = db.prepare("INSERT INTO admins (login, password) VALUES (?, ?)");
     const info = stmt.run(login, password);
     return { id: info.lastInsertRowid };
 });
 
 fastify.patch('/api/admins/:id', async (request, reply) => {
-    const { login, password } = req.body;
+    const { login, password } = request.body;
     const stmt = db.prepare("UPDATE admins SET login = ?, password = ? WHERE id = ?");
-    stmt.run(login, password, req.params.id);
+    stmt.run(login, password, request.params.id);
     return { status: "ok" };
 });
 
 fastify.delete("/api/admins/:id", async (request, reply) => {
     const stmt = db.prepare("DELETE FROM admins WHERE id = ?");
-    stmt.run(req.params.id);
+    stmt.run(request.params.id);
     return { status: "deleted" };
 })
 
@@ -44,26 +44,26 @@ fastify.get('/api/customers', async (request, reply) => {
 
 fastify.get('/api/customers/:id', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM customers WHERE id = ?");
-    return stmt.get(req.params.id);
+    return stmt.get(request.params.id);
 })
 
 fastify.post('/api/customers', async (request, reply) => {
-    const { name, surname, email, phone } = req.body;
+    const { name, surname, email, phone } = request.body;
     const stmt = db.prepare("INSERT INTO customers (name, surname, email, phone) VALUES(?, ?, ?, ?)");
     const info = stmt.run(name, surname, email, phone);
     return { id: info.lastInsertRowid };
 });
 
 fastify.patch('/api/customers/:id', async (request, reply) => {
-    const { name, surname, email, phone } = reply.body;
+    const { name, surname, email, phone } = request.body;
     const stmt = db.prepare("UPDATE customers SET name = ?, surname = ?, email = ?, phone = ? WHERE id = ?");
-    stmt.run(name, surname, email, phone, req.params.id);
+    stmt.run(name, surname, email, phone, request.params.id);
     return { status: "ok" };
 });
 
-fastify.delete('/api/customers', async (request, reply) => {
-    const stmt = db.prepare("DELETE customers WHERE id = ?");
-    stmt.run(reply.params.id);
+fastify.delete('/api/customers/:id', async (request, reply) => {
+    const stmt = db.prepare("DELETE FROM customers WHERE id = ?");
+    stmt.run(request.params.id);
     return { status: "deleted" };
 });
 
@@ -75,26 +75,26 @@ fastify.get('/api/services', async (request, reply) => {
 
 fastify.get('/api/services/:id', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM services WHERE id = ?");
-    return stmt.get(req.params.id);
+    return stmt.get(request.params.id);
 });
 
 fastify.post('/api/services', async (request, reply) => {
-    const { title, description, price } = req.body;
-    const stmt = db.prepare("INSERT INTO revices (title, description, price) VALUES(?, ?,?)");
+    const { title, description, price } = request.body;
+    const stmt = db.prepare("INSERT INTO services (title, description, price) VALUES(?, ?,?)");
     const info = stmt.run(title, description, price);
     return { id: info.lastInsertRowid };
 });
 
 fastify.patch('/api/services/:id', async (request, reply) => {
-    const { title, description, price } = req.body;
+    const { title, description, price } = request.body;
     const stmt = db.prepare("UPDATE services SET title = ?, description = ?, price =? WHERE id = ?");
-    stmt.run(title, description, price, req.params.id);
+    stmt.run(title, description, price, request.params.id);
     return { status: "ok" };
 });
 
 fastify.delete('/api/services/:id', async (request, reply) => {
-    const stmt = db.prepare("DELETE services WHERE id =?");
-    stmt.run(reply.params.id);
+    const stmt = db.prepare("DELETE FROM services WHERE id =?");
+    stmt.run(request.params.id);
     return { status: "deleted" };
 });
 
@@ -106,43 +106,43 @@ fastify.get('/api/products', async (request, reply) => {
 
 fastify.get('/api/products/:id', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM products WHERE id = ?");
-    return stmt.get(req.params.id);
+    return stmt.get(request.params.id);
 });
 
-fastify.get('/api/products/:service_id', async (request, reply) => {
+fastify.get('/api/products/by-service/:service_id', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM products WHERE service_id = ?");
-    return stmt.get(params.services);
+    return stmt.get(request.params.service_id);
 });
 
-fastify.get('/api/products/:customer_id', async (request, reply) => {
+fastify.get('/api/products/by-customer/:customer_id', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM products WHERE customer_id = ?");
-    return stmt.get(params.customer_id);
+    return stmt.all(request.params.customer_id);
 });
 
 fastify.post('/api/products', async (request, reply) => {
-    const { service_id, title, description, customer_id } = req.body;
+    const { service_id, title, description, customer_id } = request.body;
     const stmt = db.prepare("INSERT INTO products (service_id, title, description, customer_id) VALUES(?, ?, ?, ?)");
     const info = stmt.run(service_id, title, description, customer_id);
     return { id: info.lastInsertRowid };
 });
 
 fastify.patch('/api/products/:id', async (request, reply) => {
-    const { service_id, title, description, customer_id } = req.body;
+    const { service_id, title, description, customer_id } = request.body;
     const stmt = db.prepare("UPDATE products SET service_id = ?, title = ?, description = ?, customer_id = ? WHERE id = ?");
-    stmt.run(service_id, title, description, customer_id, req.params.id);
+    stmt.run(service_id, title, description, customer_id, request.params.id);
     return { status: "ok" };
 });
 
 fastify.delete('/api/products/:id', async (request, reply) => {
-    const stmt = db.prepare("DELETE products WHERE id =?");
-    stmt.run(reply.params.id);
+    const stmt = db.prepare("DELETE FROM products WHERE id =?");
+    stmt.run(request.params.id);
     return { status: "deleted" };
 })
 
 //CRUD for adding media to products
 fastify.get('/api/media/:product_id', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM media WHERE product_id = ?");
-    return stmt.all();
+    return stmt.all(request.params.product_id);
 });
 
 fastify.post('api/media/:product_id', async (request, reply) => {
@@ -155,13 +155,13 @@ fastify.post('api/media/:product_id', async (request, reply) => {
 fastify.patch('/api/media/:product_id', async (request, reply) => {
     const { product_id, url, type } = req.body;
     const stmt = db.prepare("UPDATE media SET product_id = ?, url = ?, type = ? WHERE id = ?");
-    stmt.run(product_id, url, type, req.params.id);
+    stmt.run(product_id, url, type, request.params.id);
     return { status: "ok" };
 });
 
 fastify.delete('/api/media/:product_id', async (request, reply) => {
     const stmt = db.prepare("DELETE * FROM media WHERE id = ?");
-    stmt.run(reply.params.id);
+    stmt.run(request.params.id);
     return { status: "deleted" };
 });
 
