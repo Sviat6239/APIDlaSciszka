@@ -139,6 +139,32 @@ fastify.delete('/api/products/:id', async (request, reply) => {
     return { status: "deleted" };
 })
 
+//CRUD for adding media to products
+fastify.get('/api/media/:product_id', async (request, reply) => {
+    const stmt = db.prepare("SELECT * WHERE product_id = ?");
+    return stmt.all();
+});
+
+fastify.post('api/media/:product_id', async (request, reply) => {
+    const { product_id, url, type } = req.body;
+    const stmt = db.prepare("INSERT INTO media (product_id, url, type) VALUE(?,?,?)");
+    const info = stmt.run(product_id, url, type);
+    return { id: info.lastInsertRowid };
+});
+
+fastify.patch('/api/media/:product_id', async (request, reply) => {
+    const { product_id, url, type } = req.body;
+    const stmt = db.prepare("UPDATE media SET product_id = ?, url = ?, type = ?");
+    stmt.run(product_id, url, type, req.params.id);
+    return { status: "ok" };
+});
+
+fastify.delete('/api/media/:product_id', async (request, reply) => {
+    const stmt = db.prepare("DELETE * WHERE id = ?");
+    stmt.run(reply.params.id);
+    return { status: "deleted" };
+});
+
 const start = async () => {
     try {
         await fastify.listen({ port: 3000 })
