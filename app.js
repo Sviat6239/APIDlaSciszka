@@ -49,7 +49,7 @@ fastify.patch('/api/admins/:id', async (request, reply) => {
         params.push(hashed);
     }
 
-    if(fields.lenght === 0){
+    if(fields.length === 0){
         return reply.code(400).send({error: "Nothing to update"});
     }
 
@@ -61,6 +61,7 @@ fastify.patch('/api/admins/:id', async (request, reply) => {
     if (info.changes === 0){
         return reply.code(404).send({error: "Admin not found"});
     }
+
     return { status: "ok" };
 });
 
@@ -89,21 +90,69 @@ fastify.get('/api/customers/:id', async (request, reply) => {
 
 fastify.post('/api/customers', async (request, reply) => {
     const { name, surname, email, phone } = request.body;
+
+    if(!name || !surname || !email || !phone){
+        return reply.code(400).send({error: "Name, surname, email and phone are required"});
+    }
+
     const stmt = db.prepare("INSERT INTO customers (name, surname, email, phone) VALUES(?, ?, ?, ?)");
     const info = stmt.run(name, surname, email, phone);
+
     return { id: info.lastInsertRowid };
 });
 
 fastify.patch('/api/customers/:id', async (request, reply) => {
     const { name, surname, email, phone } = request.body;
-    const stmt = db.prepare("UPDATE customers SET name = ?, surname = ?, email = ?, phone = ? WHERE id = ?");
-    stmt.run(name, surname, email, phone, request.params.id);
+    const id = request.params.id;
+
+    const fields = [];
+    const params = [];
+
+    if (name){
+        fields.push("name = ?");
+        params.push(name);
+    }
+
+    if (surname){
+        fields.push("surname = ?");
+        params.push(surname);
+    }
+
+    if (email){
+        fields.push("email = ?");
+        params.push(email);
+    }
+
+    if (phone){
+        fields.push("phone = ?");
+        params.push(email);
+    }
+
+    if(fields.length === 0){
+        return reply.code(400).send({error: "Noting to update"});
+    }
+
+    const stmt = db.prepare(`UPDATE customers SET ${fields.join(", ")} WHERE id = ?`);
+    params.push(id);
+
+    const info = stmt.run(...params);
+
+    if (info.changes === 0){
+        return reply.code(404).send({error: "Customer not found"});
+    }
+
     return { status: "ok" };
 });
 
 fastify.delete('/api/customers/:id', async (request, reply) => {
+    const id = request.params.id;
     const stmt = db.prepare("DELETE FROM customers WHERE id = ?");
-    stmt.run(request.params.id);
+    info = stmt.run(request.params.id);
+
+    if(info.changes === 0){
+        return reply.code(404).send({error: "Customer not found"});
+    }
+
     return { status: "deleted" };
 });
 
