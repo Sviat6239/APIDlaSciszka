@@ -75,7 +75,7 @@ fastify.delete("/api/admins/:id", async (request, reply) => {
     }
 
     return { status: "deleted" };
-})
+});
 
 //CRUD for customers
 fastify.get('/api/customers', async (request, reply) => {
@@ -248,23 +248,71 @@ fastify.get('/api/products/by-customer/:customer_id', async (request, reply) => 
 
 fastify.post('/api/products', async (request, reply) => {
     const { service_id, title, description, customer_id } = request.body;
+
+    if (!service_id || !title || !description || !customer_id){
+        return reply.code(400).send({error: "Service_id, title, description and customer_id are required"});
+    }
+
     const stmt = db.prepare("INSERT INTO products (service_id, title, description, customer_id) VALUES(?, ?, ?, ?)");
     const info = stmt.run(service_id, title, description, customer_id);
+
     return { id: info.lastInsertRowid };
 });
 
 fastify.patch('/api/products/:id', async (request, reply) => {
     const { service_id, title, description, customer_id } = request.body;
-    const stmt = db.prepare("UPDATE products SET service_id = ?, title = ?, description = ?, customer_id = ? WHERE id = ?");
-    stmt.run(service_id, title, description, customer_id, request.params.id);
+    const id = request.params.id;
+
+    const fields = [];
+    const params = [];
+
+    if (service_id){
+        fields.push("service_id = ?");
+        params.push(service_id);
+    }
+
+    if (title){
+        fields.push("title = ?");
+        params.push(title);
+    }
+
+    if (description){
+        fields.push("description = ?");
+        params.push(description);
+    }
+
+    if (customer_id){
+        fields.push("customer_id = ?");
+        params.push(customer_id);
+    }
+
+    if (fields.length === 0){
+        return reply.code(400).send({error: "Nothing to update"});
+    }
+
+    const stmt = db.prepare(`UPDATE products SET ${fields.join(", ")} WHERE id = ?`);
+    params.push(id);
+
+    const info = stmt.run(...params);
+
+    if (info.changes === 0){
+        return reply.code(404).send({error: "Product not found"});
+    }
+
     return { status: "ok" };
 });
 
 fastify.delete('/api/products/:id', async (request, reply) => {
+    const id = request.params.id;
     const stmt = db.prepare("DELETE FROM products WHERE id =?");
-    stmt.run(request.params.id);
+    const info = stmt.run(request.params.id);
+
+    if (info.changes === 0){
+        return reply.code(404).send({error: "Product not found"});
+    }
+
     return { status: "deleted" };
-})
+});
 
 //CRUD for adding media to products
 fastify.get('/api/media/:product_id', async (request, reply) => {
