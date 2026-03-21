@@ -1,10 +1,62 @@
 import Fastify from "fastify";
 import db from "./db";
 import bcrypt from "bcrypt";
+import fastifyJwt from "@fastify/jwt";
+import fastifyCookie from "@fastify/cookie";
 
 const fastify = Fastify({
     logger: true
 })
+
+fastify.register(fastifyCookie);
+
+fastify.register(fastifyJwt, {
+    secret: "SUPER_SECRET_KEY",
+    cookie: {
+        cookieName: 'token',
+        signed: false
+    }
+});
+
+//Login
+fastify.register('/api/login', async (request, reply)=>{
+    const {login, password} = request.body;
+    if(!login || !password){
+        return reply.code(400).send({error: "Login and password required"});
+    }
+
+    const stmt = db.prepare("SELECT * FROM admins WHERE login = ?");
+    const admin = stmt.get(login);
+
+    if (!admin){
+        return reply.code(401).send({error: "Invalid login or password!"});
+    }
+
+    const match = await bcrypt.compare(password, admin.password);
+    if (!match){
+        return reply.code(401).send({error: "Invalid login or password!"});
+    }
+
+    const token = fastify.jwt.sign({id: admin.id, login: admin.login}, {expiresIn: "2h"});
+
+    reply
+        .setCookie('token', token, {httpOnly: true})
+        .send({token});
+});
+
+//Logout
+fastify.post('/api/logout', async (request, reply)=>{
+   reply.clearCookie('token').send({status: "Logged out"});
+});
+
+//Middleware
+fastify.decorate('authenticate', async (request, reply)=>{
+    try {
+        await request.jwtVerify();
+    } catch (err){
+        reply.code(401).send({error: "Unauthorized"});
+    }
+});
 
 //CRUD for admins
 fastify.get('/api/admins', async (request, reply) => {
@@ -129,7 +181,7 @@ fastify.patch('/api/customers/:id', async (request, reply) => {
     }
 
     if(fields.length === 0){
-        return reply.code(400).send({error: "Nohting to update"});
+        return reply.code(400).send({error: "Nothing to update"});
     }
 
     const stmt = db.prepare(`UPDATE customers SET ${fields.join(", ")} WHERE id = ?`);
@@ -203,7 +255,7 @@ fastify.patch('/api/services/:id', async (request, reply) => {
     }
 
     if(fields.length === 0){
-        return reply.code(400).send({error: "Nohting to update"});
+        return reply.code(400).send({error: "Nothing to update"});
     }
 
     const stmt = db.prepare(`UPDATE services SET ${fields.join(", ")} WHERE id = ?`);
