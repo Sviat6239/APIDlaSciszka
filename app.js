@@ -129,7 +129,7 @@ fastify.patch('/api/customers/:id', async (request, reply) => {
     }
 
     if(fields.length === 0){
-        return reply.code(400).send({error: "Noting to update"});
+        return reply.code(400).send({error: "Nohting to update"});
     }
 
     const stmt = db.prepare(`UPDATE customers SET ${fields.join(", ")} WHERE id = ?`);
@@ -200,6 +200,10 @@ fastify.patch('/api/services/:id', async (request, reply) => {
     if(price){
         fields.push("price = ?");
         params.push(price);
+    }
+
+    if(fields.length === 0){
+        return reply.code(400).send({error: "Nohting to update"});
     }
 
     const stmt = db.prepare(`UPDATE services SET ${fields.join(", ")} WHERE id = ?`);
@@ -327,14 +331,14 @@ fastify.post('/api/media', async (request, reply) => {
         return reply.code(400).send({error: "Product_id, url and type are required"});
     }
 
-    const stmt = db.prepare("INSERT INTO media (product_id, url, type) VALUE(?,?,?)");
+    const stmt = db.prepare("INSERT INTO media (product_id, url, type) VALUEs(?,?,?)");
     const info = stmt.run(product_id, url, type);
 
     return { id: info.lastInsertRowid };
 });
 
 fastify.patch('/api/media/:product_id', async (request, reply) => {
-    const { product_id, url, type } = req.body;
+    const { product_id, url, type } = reqгuest.body;
     const id = request.params.id;
 
     const fields = [];
@@ -359,7 +363,7 @@ fastify.patch('/api/media/:product_id', async (request, reply) => {
         return reply.code(400).send({error: "Nothing to update"});
     }
 
-    const stmt = db.prepare(`UPDATE media ${fields.join(", ")} WHERE id = ?`);
+    const stmt = db.prepare(`UPDATE media SET ${fields.join(", ")} WHERE id = ?`);
     params.push(id);
 
     const info = stmt.run(...params);
@@ -373,7 +377,7 @@ fastify.patch('/api/media/:product_id', async (request, reply) => {
 
 fastify.delete('/api/media/:product_id', async (request, reply) => {
     const id = request.params.id;
-    const stmt = db.prepare("DELETE * FROM media WHERE id = ?");
+    const stmt = db.prepare("DELETE FROM media WHERE id = ?");
     const info = stmt.run(request.params.id);
 
     if (info.changes === 0){
