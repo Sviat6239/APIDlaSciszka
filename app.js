@@ -40,7 +40,7 @@ fastify.patch('/api/admins/:id', async (request, reply) => {
 
     if (login){
         fields.push("login = ?");
-        params.push("password = ?");
+        params.push(login);
     }
 
     if (password){
@@ -68,7 +68,7 @@ fastify.patch('/api/admins/:id', async (request, reply) => {
 fastify.delete("/api/admins/:id", async (request, reply) => {
     const id = request.params.id;
     const stmt = db.prepare("DELETE FROM admins WHERE id = ?");
-    info = stmt.run(request.params.id);
+    const info = stmt.run(request.params.id);
 
     if (info.changes === 0){
         return reply.code(404).send({error: "Admin not found"});
@@ -125,7 +125,7 @@ fastify.patch('/api/customers/:id', async (request, reply) => {
 
     if (phone){
         fields.push("phone = ?");
-        params.push(email);
+        params.push(phone);
     }
 
     if(fields.length === 0){
@@ -147,7 +147,7 @@ fastify.patch('/api/customers/:id', async (request, reply) => {
 fastify.delete('/api/customers/:id', async (request, reply) => {
     const id = request.params.id;
     const stmt = db.prepare("DELETE FROM customers WHERE id = ?");
-    info = stmt.run(request.params.id);
+    const info = stmt.run(request.params.id);
 
     if(info.changes === 0){
         return reply.code(404).send({error: "Customer not found"});
@@ -171,7 +171,7 @@ fastify.post('/api/services', async (request, reply) => {
     const { title, description, price } = request.body;
 
     if (!title || !description || !price){
-        return reply.code(400).send({error: "Title, desription and price are required"});
+        return reply.code(400).send({error: "Title, description and price are required"});
     }
 
     const stmt = db.prepare("INSERT INTO services (title, description, price) VALUES(?, ?, ?)");
@@ -216,7 +216,7 @@ fastify.patch('/api/services/:id', async (request, reply) => {
 fastify.delete('/api/services/:id', async (request, reply) => {
     const id = request.params.id;
     const stmt = db.prepare("DELETE FROM services WHERE id =?");
-    info = stmt.run(request.params.id);
+    const info = stmt.run(request.params.id);
 
     if(info.changes === 0){
         return reply.code(404).send({error: "Service not found"});
@@ -320,23 +320,66 @@ fastify.get('/api/media/:product_id', async (request, reply) => {
     return stmt.all(request.params.product_id);
 });
 
-fastify.post('api/media/:product_id', async (request, reply) => {
+fastify.post('/api/media', async (request, reply) => {
     const { product_id, url, type } = req.body;
+
+    if (!product_id || !url || !type){
+        return reply.code(400).send({error: "Product_id, url and type are required"});
+    }
+
     const stmt = db.prepare("INSERT INTO media (product_id, url, type) VALUE(?,?,?)");
     const info = stmt.run(product_id, url, type);
+
     return { id: info.lastInsertRowid };
 });
 
 fastify.patch('/api/media/:product_id', async (request, reply) => {
     const { product_id, url, type } = req.body;
-    const stmt = db.prepare("UPDATE media SET product_id = ?, url = ?, type = ? WHERE id = ?");
-    stmt.run(product_id, url, type, request.params.id);
+    const id = request.params.id;
+
+    const fields = [];
+    const params = [];
+
+    if (product_id){
+        fields.push("product_id = ?");
+        params.push(product_id);
+    }
+
+    if (url){
+        fields.push("url = ?");
+        params.push(url);
+    }
+
+    if (type){
+        fields.push("type = ?");
+        params.push(type);
+    }
+
+    if (fields.length === 0){
+        return reply.code(400).send({error: "Nothing to update"});
+    }
+
+    const stmt = db.prepare(`UPDATE media ${fields.join(", ")} WHERE id = ?`);
+    params.push(id);
+
+    const info = stmt.run(...params);
+
+    if (info.changes === 0){
+        return reply.code(404).send({error: "Media not found"});
+    }
+
     return { status: "ok" };
 });
 
 fastify.delete('/api/media/:product_id', async (request, reply) => {
+    const id = request.params.id;
     const stmt = db.prepare("DELETE * FROM media WHERE id = ?");
-    stmt.run(request.params.id);
+    const info = stmt.run(request.params.id);
+
+    if (info.changes === 0){
+        return reply.code(404).send({error: "Media not found"});
+    }
+
     return { status: "deleted" };
 });
 
