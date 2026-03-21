@@ -19,7 +19,7 @@ fastify.register(fastifyJwt, {
 });
 
 //Login
-fastify.register('/api/login', async (request, reply)=>{
+fastify.post('/api/login', async (request, reply)=>{
     const {login, password} = request.body;
     if(!login || !password){
         return reply.code(400).send({error: "Login and password required"});
