@@ -169,21 +169,59 @@ fastify.get('/api/services/:id', async (request, reply) => {
 
 fastify.post('/api/services', async (request, reply) => {
     const { title, description, price } = request.body;
-    const stmt = db.prepare("INSERT INTO services (title, description, price) VALUES(?, ?,?)");
+
+    if (!title || !description || !price){
+        return reply.code(400).send({error: "Title, desription and price are required"});
+    }
+
+    const stmt = db.prepare("INSERT INTO services (title, description, price) VALUES(?, ?, ?)");
     const info = stmt.run(title, description, price);
+
     return { id: info.lastInsertRowid };
 });
 
 fastify.patch('/api/services/:id', async (request, reply) => {
     const { title, description, price } = request.body;
-    const stmt = db.prepare("UPDATE services SET title = ?, description = ?, price =? WHERE id = ?");
-    stmt.run(title, description, price, request.params.id);
+    const id = request.params.id;
+
+    const fields = [];
+    const params = [];
+
+    if (title){
+        fields.push("title = ?");
+        params.push(title);
+    }
+
+    if (description){
+        fields.push("description = ?");
+        params.push(description);
+    }
+
+    if(price){
+        fields.push("price = ?");
+        params.push(price);
+    }
+
+    const stmt = db.prepare(`UPDATE services SET ${fields.join(", ")} WHERE id = ?`);
+    params.push(id);
+    const info = stmt.run(...params);
+
+    if (info.changes === 0){
+        return reply.code(404).send({error: "Service not found"});
+    }
+
     return { status: "ok" };
 });
 
 fastify.delete('/api/services/:id', async (request, reply) => {
+    const id = request.params.id;
     const stmt = db.prepare("DELETE FROM services WHERE id =?");
-    stmt.run(request.params.id);
+    info = stmt.run(request.params.id);
+
+    if(info.changes === 0){
+        return reply.code(404).send({error: "Service not found"});
+    }
+
     return { status: "deleted" };
 });
 
