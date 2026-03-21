@@ -1,5 +1,6 @@
 import Fastify from "fastify";
 import db from "./db";
+import bcrypt from "bcrypt";
 
 const fastify = Fastify({
     logger: true
@@ -18,21 +19,60 @@ fastify.get('/api/admins/:id', async (request, reply) => {
 
 fastify.post('/api/admin', async (request, reply) => {
     const { login, password } = request.body;
+
+    if (!login || !password) {
+        return reply.code(400).send({error: "Login and password required"});
+    }
+
+    const hashed = await bcrypt.hash(password, 12);
     const stmt = db.prepare("INSERT INTO admins (login, password) VALUES (?, ?)");
-    const info = stmt.run(login, password);
+    const info = stmt.run(login, hashed);
+
     return { id: info.lastInsertRowid };
 });
 
 fastify.patch('/api/admins/:id', async (request, reply) => {
     const { login, password } = request.body;
-    const stmt = db.prepare("UPDATE admins SET login = ?, password = ? WHERE id = ?");
-    stmt.run(login, password, request.params.id);
+    const id = request.params.id;
+
+    const fields = [];
+    const params = [];
+
+    if (login){
+        fields.push("login = ?");
+        params.push("password = ?");
+    }
+
+    if (password){
+        const hashed = await bcrypt.hash(password, 12);
+        fields.push("password = ?");
+        params.push(hashed);
+    }
+
+    if(fields.lenght === 0){
+        return reply.code(400).send({error: "Nothing to update"});
+    }
+
+    const stmt = db.prepare(`UPDATE admins SET ${fields.join(", ")} WHERE id = ?`);
+    params.push(id);
+
+    const info = stmt.run(...params);
+
+    if (info.changes === 0){
+        return reply.code(404).send({error: "Admin not found"});
+    }
     return { status: "ok" };
 });
 
 fastify.delete("/api/admins/:id", async (request, reply) => {
+    const id = request.params.id;
     const stmt = db.prepare("DELETE FROM admins WHERE id = ?");
-    stmt.run(request.params.id);
+    info = stmt.run(request.params.id);
+
+    if (info.changes === 0){
+        return reply.code(404).send({error: "Admin not found"});
+    }
+
     return { status: "deleted" };
 })
 
