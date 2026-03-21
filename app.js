@@ -59,17 +59,17 @@ fastify.decorate('authenticate', async (request, reply)=>{
 });
 
 //CRUD for admins
-fastify.get('/api/admins', async (request, reply) => {
+fastify.get('/api/admins', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM admins");
     return stmt.all();
 });
 
-fastify.get('/api/admins/:id', async (request, reply) => {
+fastify.get('/api/admins/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM admins WHERE id = ?");
     return stmt.get(request.params.id);
 });
 
-fastify.post('/api/admin', async (request, reply) => {
+fastify.post('/api/admin', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { login, password } = request.body;
 
     if (!login || !password) {
@@ -83,7 +83,7 @@ fastify.post('/api/admin', async (request, reply) => {
     return { id: info.lastInsertRowid };
 });
 
-fastify.patch('/api/admins/:id', async (request, reply) => {
+fastify.patch('/api/admins/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { login, password } = request.body;
     const id = request.params.id;
 
@@ -117,7 +117,7 @@ fastify.patch('/api/admins/:id', async (request, reply) => {
     return { status: "ok" };
 });
 
-fastify.delete("/api/admins/:id", async (request, reply) => {
+fastify.delete("/api/admins/:id", { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const id = request.params.id;
     const stmt = db.prepare("DELETE FROM admins WHERE id = ?");
     const info = stmt.run(request.params.id);
@@ -140,7 +140,7 @@ fastify.get('/api/customers/:id', async (request, reply) => {
     return stmt.get(request.params.id);
 })
 
-fastify.post('/api/customers', async (request, reply) => {
+fastify.post('/api/customers', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { name, surname, email, phone } = request.body;
 
     if(!name || !surname || !email || !phone){
@@ -153,7 +153,7 @@ fastify.post('/api/customers', async (request, reply) => {
     return { id: info.lastInsertRowid };
 });
 
-fastify.patch('/api/customers/:id', async (request, reply) => {
+fastify.patch('/api/customers/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { name, surname, email, phone } = request.body;
     const id = request.params.id;
 
@@ -196,7 +196,7 @@ fastify.patch('/api/customers/:id', async (request, reply) => {
     return { status: "ok" };
 });
 
-fastify.delete('/api/customers/:id', async (request, reply) => {
+fastify.delete('/api/customers/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const id = request.params.id;
     const stmt = db.prepare("DELETE FROM customers WHERE id = ?");
     const info = stmt.run(request.params.id);
@@ -219,7 +219,7 @@ fastify.get('/api/services/:id', async (request, reply) => {
     return stmt.get(request.params.id);
 });
 
-fastify.post('/api/services', async (request, reply) => {
+fastify.post('/api/services', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { title, description, price } = request.body;
 
     if (!title || !description || !price){
@@ -232,7 +232,7 @@ fastify.post('/api/services', async (request, reply) => {
     return { id: info.lastInsertRowid };
 });
 
-fastify.patch('/api/services/:id', async (request, reply) => {
+fastify.patch('/api/services/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { title, description, price } = request.body;
     const id = request.params.id;
 
@@ -269,7 +269,7 @@ fastify.patch('/api/services/:id', async (request, reply) => {
     return { status: "ok" };
 });
 
-fastify.delete('/api/services/:id', async (request, reply) => {
+fastify.delete('/api/services/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const id = request.params.id;
     const stmt = db.prepare("DELETE FROM services WHERE id =?");
     const info = stmt.run(request.params.id);
@@ -302,7 +302,7 @@ fastify.get('/api/products/by-customer/:customer_id', async (request, reply) => 
     return stmt.all(request.params.customer_id);
 });
 
-fastify.post('/api/products', async (request, reply) => {
+fastify.post('/api/products', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { service_id, title, description, customer_id } = request.body;
 
     if (!service_id || !title || !description || !customer_id){
@@ -315,7 +315,7 @@ fastify.post('/api/products', async (request, reply) => {
     return { id: info.lastInsertRowid };
 });
 
-fastify.patch('/api/products/:id', async (request, reply) => {
+fastify.patch('/api/products/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { service_id, title, description, customer_id } = request.body;
     const id = request.params.id;
 
@@ -358,7 +358,7 @@ fastify.patch('/api/products/:id', async (request, reply) => {
     return { status: "ok" };
 });
 
-fastify.delete('/api/products/:id', async (request, reply) => {
+fastify.delete('/api/products/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const id = request.params.id;
     const stmt = db.prepare("DELETE FROM products WHERE id =?");
     const info = stmt.run(request.params.id);
@@ -376,7 +376,7 @@ fastify.get('/api/media/:product_id', async (request, reply) => {
     return stmt.all(request.params.product_id);
 });
 
-fastify.post('/api/media', async (request, reply) => {
+fastify.post('/api/media', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { product_id, url, type } = req.body;
 
     if (!product_id || !url || !type){
@@ -389,7 +389,7 @@ fastify.post('/api/media', async (request, reply) => {
     return { id: info.lastInsertRowid };
 });
 
-fastify.patch('/api/media/:product_id', async (request, reply) => {
+fastify.patch('/api/media/:product_id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { product_id, url, type } = reqгuest.body;
     const id = request.params.id;
 
@@ -427,7 +427,7 @@ fastify.patch('/api/media/:product_id', async (request, reply) => {
     return { status: "ok" };
 });
 
-fastify.delete('/api/media/:product_id', async (request, reply) => {
+fastify.delete('/api/media/:product_id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const id = request.params.id;
     const stmt = db.prepare("DELETE FROM media WHERE id = ?");
     const info = stmt.run(request.params.id);
