@@ -315,6 +315,47 @@ fastify.post('/api/products', { preHandler: [fastify.authenticate] }, async (req
     return { id: info.lastInsertRowid };
 });
 
+fastify.put('/api/products/:id', {preHandler: [fastify.authenticate]}, async (request, reply) => {
+    const {service_id, title, description, customer_id } = request.body;
+    const id = request.params.id;
+
+    const fields = [];
+    const params = [];
+
+    if (service_id){
+        fields.push("service_id = ?");
+        params.push(service_id);
+    }
+
+    if (title){
+        fields.push("title = ?");
+        params.push(title);
+    }
+
+    if (description){
+        fields.push("description = ?");
+        params.push(description);
+    }
+
+    if (customer_id){
+        fields.push("customer_id = ?");
+        params.push(customer_id);
+    }
+
+    if (fields.length === 0){
+        return reply.code(400).send({error:"Nothing to update"});
+    }
+
+    const stmt = db.prepare(`UPDATE services SET ${fields.join(", ")} WHERE id = ?`);
+    params.push(id);
+
+    const info = stmt.run(...params);
+    if(info.chanes === 0){
+        return reply.code(404).send({error: "Product not found"});
+    }
+    return { status: "ok" };
+})
+
 fastify.patch('/api/products/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { service_id, title, description, customer_id } = request.body;
     const id = request.params.id;
@@ -388,6 +429,43 @@ fastify.post('/api/media', { preHandler: [fastify.authenticate] }, async (reques
 
     return { id: info.lastInsertRowid };
 });
+
+fastify.put('/api/media/:product_id', {preHandler: [fastify.authenticate]}, async (request, reply) => {
+    const { product_id, url, type } = request.body;
+    const id = request.params.id;
+
+    const fields = [];
+    const params = [];
+
+    if (products_id){
+        fields.push("product_id = ?");
+        params.push(product_id);
+    }
+
+    if (url){
+        fields.push("url = ?");
+        params.push(url);
+    }
+
+    if (type){
+        fields.push("type = ?");
+        params.push(type);
+    }
+
+    if (fields.leght === 0){
+        return reply.code(400).send({error: "Nothing to update"});
+    }
+
+    const stmt = db.prepare(`UPDATE media SET ${fields.join(", ")} WHERE id = ?`);
+    params.push(id);
+
+    const info = stmt.run(...params);
+
+    if (info.changes === 0){
+        return reply.code(404).send({error: "Media not found"});
+    }
+
+})
 
 fastify.patch('/api/media/:product_id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { product_id, url, type } = reqгuest.body;
