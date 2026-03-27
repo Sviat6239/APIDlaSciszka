@@ -19,42 +19,42 @@ fastify.register(fastifyJwt, {
 });
 
 //Login
-fastify.post('/api/login', async (request, reply)=>{
-    const {login, password} = request.body;
-    if(!login || !password){
-        return reply.code(400).send({error: "Login and password required"});
+fastify.post('/api/login', async (request, reply) => {
+    const { login, password } = request.body;
+    if (!login || !password) {
+        return reply.code(400).send({ error: "Login and password required" });
     }
 
     const stmt = db.prepare("SELECT * FROM admins WHERE login = ?");
     const admin = stmt.get(login);
 
-    if (!admin){
-        return reply.code(401).send({error: "Invalid login or password!"});
+    if (!admin) {
+        return reply.code(401).send({ error: "Invalid login or password!" });
     }
 
     const match = await bcrypt.compare(password, admin.password);
-    if (!match){
-        return reply.code(401).send({error: "Invalid login or password!"});
+    if (!match) {
+        return reply.code(401).send({ error: "Invalid login or password!" });
     }
 
-    const token = fastify.jwt.sign({id: admin.id, login: admin.login}, {expiresIn: "2h"});
+    const token = fastify.jwt.sign({ id: admin.id, login: admin.login }, { expiresIn: "2h" });
 
     reply
-        .setCookie('token', token, {httpOnly: true})
-        .send({token});
+        .setCookie('token', token, { httpOnly: true })
+        .send({ token });
 });
 
 //Logout
-fastify.post('/api/logout', async (request, reply)=>{
-   reply.clearCookie('token').send({status: "Logged out"});
+fastify.post('/api/logout', async (request, reply) => {
+    reply.clearCookie('token').send({ status: "Logged out" });
 });
 
 //Middleware
-fastify.decorate('authenticate', async (request, reply)=>{
+fastify.decorate('authenticate', async (request, reply) => {
     try {
         await request.jwtVerify();
-    } catch (err){
-        reply.code(401).send({error: "Unauthorized"});
+    } catch (err) {
+        reply.code(401).send({ error: "Unauthorized" });
     }
 });
 
@@ -73,7 +73,7 @@ fastify.post('/api/admin', { preHandler: [fastify.authenticate] }, async (reques
     const { login, password } = request.body;
 
     if (!login || !password) {
-        return reply.code(400).send({error: "Login and password required"});
+        return reply.code(400).send({ error: "Login and password required" });
     }
 
     const hashed = await bcrypt.hash(password, 12);
@@ -83,26 +83,26 @@ fastify.post('/api/admin', { preHandler: [fastify.authenticate] }, async (reques
     return { id: info.lastInsertRowid };
 });
 
-fastify.patch('/api/admins/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
-    const { login, password } = request.body;
-    const id = request.params.id;
+fastify.put('/api/admins/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { login, password } = require.body;
+    const id = require.params.id;
 
     const fields = [];
     const params = [];
 
-    if (login){
+    if (login) {
         fields.push("login = ?");
         params.push(login);
     }
 
-    if (password){
+    if (password) {
         const hashed = await bcrypt.hash(password, 12);
         fields.push("password = ?");
         params.push(hashed);
     }
 
-    if(fields.length === 0){
-        return reply.code(400).send({error: "Nothing to update"});
+    if (fields.length === 0) {
+        return reply.code(400).send({ error: "Nothing to update" });
     }
 
     const stmt = db.prepare(`UPDATE admins SET ${fields.join(", ")} WHERE id = ?`);
@@ -110,8 +110,43 @@ fastify.patch('/api/admins/:id', { preHandler: [fastify.authenticate] }, async (
 
     const info = stmt.run(...params);
 
-    if (info.changes === 0){
-        return reply.code(404).send({error: "Admin not found"});
+    if (info.length === 0) {
+        return reply.code(404).send({ error: "Admin not found" });
+    }
+
+    return { status: "ok" };
+
+});
+
+fastify.patch('/api/admins/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { login, password } = request.body;
+    const id = request.params.id;
+
+    const fields = [];
+    const params = [];
+
+    if (login) {
+        fields.push("login = ?");
+        params.push(login);
+    }
+
+    if (password) {
+        const hashed = await bcrypt.hash(password, 12);
+        fields.push("password = ?");
+        params.push(hashed);
+    }
+
+    if (fields.length === 0) {
+        return reply.code(400).send({ error: "Nothing to update" });
+    }
+
+    const stmt = db.prepare(`UPDATE admins SET ${fields.join(", ")} WHERE id = ?`);
+    params.push(id);
+
+    const info = stmt.run(...params);
+
+    if (info.changes === 0) {
+        return reply.code(404).send({ error: "Admin not found" });
     }
 
     return { status: "ok" };
@@ -122,8 +157,8 @@ fastify.delete("/api/admins/:id", { preHandler: [fastify.authenticate] }, async 
     const stmt = db.prepare("DELETE FROM admins WHERE id = ?");
     const info = stmt.run(request.params.id);
 
-    if (info.changes === 0){
-        return reply.code(404).send({error: "Admin not found"});
+    if (info.changes === 0) {
+        return reply.code(404).send({ error: "Admin not found" });
     }
 
     return { status: "deleted" };
@@ -143,8 +178,8 @@ fastify.get('/api/customers/:id', async (request, reply) => {
 fastify.post('/api/customers', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { name, surname, email, phone } = request.body;
 
-    if(!name || !surname || !email || !phone){
-        return reply.code(400).send({error: "Name, surname, email and phone are required"});
+    if (!name || !surname || !email || !phone) {
+        return reply.code(400).send({ error: "Name, surname, email and phone are required" });
     }
 
     const stmt = db.prepare("INSERT INTO customers (name, surname, email, phone) VALUES(?, ?, ?, ?)");
@@ -160,28 +195,28 @@ fastify.patch('/api/customers/:id', { preHandler: [fastify.authenticate] }, asyn
     const fields = [];
     const params = [];
 
-    if (name){
+    if (name) {
         fields.push("name = ?");
         params.push(name);
     }
 
-    if (surname){
+    if (surname) {
         fields.push("surname = ?");
         params.push(surname);
     }
 
-    if (email){
+    if (email) {
         fields.push("email = ?");
         params.push(email);
     }
 
-    if (phone){
+    if (phone) {
         fields.push("phone = ?");
         params.push(phone);
     }
 
-    if(fields.length === 0){
-        return reply.code(400).send({error: "Nothing to update"});
+    if (fields.length === 0) {
+        return reply.code(400).send({ error: "Nothing to update" });
     }
 
     const stmt = db.prepare(`UPDATE customers SET ${fields.join(", ")} WHERE id = ?`);
@@ -189,8 +224,8 @@ fastify.patch('/api/customers/:id', { preHandler: [fastify.authenticate] }, asyn
 
     const info = stmt.run(...params);
 
-    if (info.changes === 0){
-        return reply.code(404).send({error: "Customer not found"});
+    if (info.changes === 0) {
+        return reply.code(404).send({ error: "Customer not found" });
     }
 
     return { status: "ok" };
@@ -201,8 +236,8 @@ fastify.delete('/api/customers/:id', { preHandler: [fastify.authenticate] }, asy
     const stmt = db.prepare("DELETE FROM customers WHERE id = ?");
     const info = stmt.run(request.params.id);
 
-    if(info.changes === 0){
-        return reply.code(404).send({error: "Customer not found"});
+    if (info.changes === 0) {
+        return reply.code(404).send({ error: "Customer not found" });
     }
 
     return { status: "deleted" };
@@ -222,8 +257,8 @@ fastify.get('/api/services/:id', async (request, reply) => {
 fastify.post('/api/services', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { title, description, price } = request.body;
 
-    if (!title || !description || !price){
-        return reply.code(400).send({error: "Title, description and price are required"});
+    if (!title || !description || !price) {
+        return reply.code(400).send({ error: "Title, description and price are required" });
     }
 
     const stmt = db.prepare("INSERT INTO services (title, description, price) VALUES(?, ?, ?)");
@@ -239,31 +274,31 @@ fastify.patch('/api/services/:id', { preHandler: [fastify.authenticate] }, async
     const fields = [];
     const params = [];
 
-    if (title){
+    if (title) {
         fields.push("title = ?");
         params.push(title);
     }
 
-    if (description){
+    if (description) {
         fields.push("description = ?");
         params.push(description);
     }
 
-    if(price){
+    if (price) {
         fields.push("price = ?");
         params.push(price);
     }
 
-    if(fields.length === 0){
-        return reply.code(400).send({error: "Nothing to update"});
+    if (fields.length === 0) {
+        return reply.code(400).send({ error: "Nothing to update" });
     }
 
     const stmt = db.prepare(`UPDATE services SET ${fields.join(", ")} WHERE id = ?`);
     params.push(id);
     const info = stmt.run(...params);
 
-    if (info.changes === 0){
-        return reply.code(404).send({error: "Service not found"});
+    if (info.changes === 0) {
+        return reply.code(404).send({ error: "Service not found" });
     }
 
     return { status: "ok" };
@@ -274,8 +309,8 @@ fastify.delete('/api/services/:id', { preHandler: [fastify.authenticate] }, asyn
     const stmt = db.prepare("DELETE FROM services WHERE id =?");
     const info = stmt.run(request.params.id);
 
-    if(info.changes === 0){
-        return reply.code(404).send({error: "Service not found"});
+    if (info.changes === 0) {
+        return reply.code(404).send({ error: "Service not found" });
     }
 
     return { status: "deleted" };
@@ -305,8 +340,8 @@ fastify.get('/api/products/by-customer/:customer_id', async (request, reply) => 
 fastify.post('/api/products', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { service_id, title, description, customer_id } = request.body;
 
-    if (!service_id || !title || !description || !customer_id){
-        return reply.code(400).send({error: "Service_id, title, description and customer_id are required"});
+    if (!service_id || !title || !description || !customer_id) {
+        return reply.code(400).send({ error: "Service_id, title, description and customer_id are required" });
     }
 
     const stmt = db.prepare("INSERT INTO products (service_id, title, description, customer_id) VALUES(?, ?, ?, ?)");
@@ -315,43 +350,43 @@ fastify.post('/api/products', { preHandler: [fastify.authenticate] }, async (req
     return { id: info.lastInsertRowid };
 });
 
-fastify.put('/api/products/:id', {preHandler: [fastify.authenticate]}, async (request, reply) => {
-    const {service_id, title, description, customer_id } = request.body;
+fastify.put('/api/products/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { service_id, title, description, customer_id } = request.body;
     const id = request.params.id;
 
     const fields = [];
     const params = [];
 
-    if (service_id){
+    if (service_id) {
         fields.push("service_id = ?");
         params.push(service_id);
     }
 
-    if (title){
+    if (title) {
         fields.push("title = ?");
         params.push(title);
     }
 
-    if (description){
+    if (description) {
         fields.push("description = ?");
         params.push(description);
     }
 
-    if (customer_id){
+    if (customer_id) {
         fields.push("customer_id = ?");
         params.push(customer_id);
     }
 
-    if (fields.length === 0){
-        return reply.code(400).send({error:"Nothing to update"});
+    if (fields.length === 0) {
+        return reply.code(400).send({ error: "Nothing to update" });
     }
 
     const stmt = db.prepare(`UPDATE services SET ${fields.join(", ")} WHERE id = ?`);
     params.push(id);
 
     const info = stmt.run(...params);
-    if(info.chanes === 0){
-        return reply.code(404).send({error: "Product not found"});
+    if (info.chanes === 0) {
+        return reply.code(404).send({ error: "Product not found" });
     }
     return { status: "ok" };
 })
@@ -363,28 +398,28 @@ fastify.patch('/api/products/:id', { preHandler: [fastify.authenticate] }, async
     const fields = [];
     const params = [];
 
-    if (service_id){
+    if (service_id) {
         fields.push("service_id = ?");
         params.push(service_id);
     }
 
-    if (title){
+    if (title) {
         fields.push("title = ?");
         params.push(title);
     }
 
-    if (description){
+    if (description) {
         fields.push("description = ?");
         params.push(description);
     }
 
-    if (customer_id){
+    if (customer_id) {
         fields.push("customer_id = ?");
         params.push(customer_id);
     }
 
-    if (fields.length === 0){
-        return reply.code(400).send({error: "Nothing to update"});
+    if (fields.length === 0) {
+        return reply.code(400).send({ error: "Nothing to update" });
     }
 
     const stmt = db.prepare(`UPDATE products SET ${fields.join(", ")} WHERE id = ?`);
@@ -392,8 +427,8 @@ fastify.patch('/api/products/:id', { preHandler: [fastify.authenticate] }, async
 
     const info = stmt.run(...params);
 
-    if (info.changes === 0){
-        return reply.code(404).send({error: "Product not found"});
+    if (info.changes === 0) {
+        return reply.code(404).send({ error: "Product not found" });
     }
 
     return { status: "ok" };
@@ -404,8 +439,8 @@ fastify.delete('/api/products/:id', { preHandler: [fastify.authenticate] }, asyn
     const stmt = db.prepare("DELETE FROM products WHERE id =?");
     const info = stmt.run(request.params.id);
 
-    if (info.changes === 0){
-        return reply.code(404).send({error: "Product not found"});
+    if (info.changes === 0) {
+        return reply.code(404).send({ error: "Product not found" });
     }
 
     return { status: "deleted" };
@@ -420,8 +455,8 @@ fastify.get('/api/media/:product_id', async (request, reply) => {
 fastify.post('/api/media', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { product_id, url, type } = req.body;
 
-    if (!product_id || !url || !type){
-        return reply.code(400).send({error: "Product_id, url and type are required"});
+    if (!product_id || !url || !type) {
+        return reply.code(400).send({ error: "Product_id, url and type are required" });
     }
 
     const stmt = db.prepare("INSERT INTO media (product_id, url, type) VALUEs(?,?,?)");
@@ -430,30 +465,30 @@ fastify.post('/api/media', { preHandler: [fastify.authenticate] }, async (reques
     return { id: info.lastInsertRowid };
 });
 
-fastify.put('/api/media/:product_id', {preHandler: [fastify.authenticate]}, async (request, reply) => {
+fastify.put('/api/media/:product_id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { product_id, url, type } = request.body;
     const id = request.params.id;
 
     const fields = [];
     const params = [];
 
-    if (products_id){
+    if (products_id) {
         fields.push("product_id = ?");
         params.push(product_id);
     }
 
-    if (url){
+    if (url) {
         fields.push("url = ?");
         params.push(url);
     }
 
-    if (type){
+    if (type) {
         fields.push("type = ?");
         params.push(type);
     }
 
-    if (fields.leght === 0){
-        return reply.code(400).send({error: "Nothing to update"});
+    if (fields.leght === 0) {
+        return reply.code(400).send({ error: "Nothing to update" });
     }
 
     const stmt = db.prepare(`UPDATE media SET ${fields.join(", ")} WHERE id = ?`);
@@ -461,8 +496,8 @@ fastify.put('/api/media/:product_id', {preHandler: [fastify.authenticate]}, asyn
 
     const info = stmt.run(...params);
 
-    if (info.changes === 0){
-        return reply.code(404).send({error: "Media not found"});
+    if (info.changes === 0) {
+        return reply.code(404).send({ error: "Media not found" });
     }
 
 })
@@ -474,23 +509,23 @@ fastify.patch('/api/media/:product_id', { preHandler: [fastify.authenticate] }, 
     const fields = [];
     const params = [];
 
-    if (product_id){
+    if (product_id) {
         fields.push("product_id = ?");
         params.push(product_id);
     }
 
-    if (url){
+    if (url) {
         fields.push("url = ?");
         params.push(url);
     }
 
-    if (type){
+    if (type) {
         fields.push("type = ?");
         params.push(type);
     }
 
-    if (fields.length === 0){
-        return reply.code(400).send({error: "Nothing to update"});
+    if (fields.length === 0) {
+        return reply.code(400).send({ error: "Nothing to update" });
     }
 
     const stmt = db.prepare(`UPDATE media SET ${fields.join(", ")} WHERE id = ?`);
@@ -498,8 +533,8 @@ fastify.patch('/api/media/:product_id', { preHandler: [fastify.authenticate] }, 
 
     const info = stmt.run(...params);
 
-    if (info.changes === 0){
-        return reply.code(404).send({error: "Media not found"});
+    if (info.changes === 0) {
+        return reply.code(404).send({ error: "Media not found" });
     }
 
     return { status: "ok" };
@@ -510,8 +545,8 @@ fastify.delete('/api/media/:product_id', { preHandler: [fastify.authenticate] },
     const stmt = db.prepare("DELETE FROM media WHERE id = ?");
     const info = stmt.run(request.params.id);
 
-    if (info.changes === 0){
-        return reply.code(404).send({error: "Media not found"});
+    if (info.changes === 0) {
+        return reply.code(404).send({ error: "Media not found" });
     }
 
     return { status: "deleted" };
