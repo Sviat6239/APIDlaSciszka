@@ -188,6 +188,49 @@ fastify.post('/api/customers', { preHandler: [fastify.authenticate] }, async (re
     return { id: info.lastInsertRowid };
 });
 
+fastify.put('/api/customers/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { name, surname, email, phone } = request.body;
+    const id = request.params.id;
+
+    const fields = [];
+    const params = [];
+
+    if (name) {
+        fields.push("name =  ?");
+        params.push(name);
+    }
+
+    if (surname) {
+        fields.push("surname = ?");
+        params.push(surname);
+    }
+
+    if (email) {
+        fields.push("email = ?");
+        params.push(email);
+    }
+
+    if (phone) {
+        fields.push("phone = ?");
+        params.push(phone);
+    }
+
+    if (fields.length === 0) {
+        return code(400).send({ error: "Nothing to update" });
+    }
+
+    const stmt = db.prepare(`UPDATE customers SET ${fields.join(", ")} WHERE id = ?`);
+    params.push(id);
+
+    const info = stmt.run(...params);
+
+    if (info.changes === 0) {
+        return reply.code(404).send({ error: "Customer not found" });
+    }
+
+    return { status: "ok" };
+});
+
 fastify.patch('/api/customers/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { name, surname, email, phone } = request.body;
     const id = request.params.id;
