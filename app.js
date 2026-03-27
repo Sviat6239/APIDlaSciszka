@@ -310,6 +310,43 @@ fastify.post('/api/services', { preHandler: [fastify.authenticate] }, async (req
     return { id: info.lastInsertRowid };
 });
 
+fastify.put('/api/services/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { title, description, price } = request.body;
+    const id = request.params.id;
+
+    const fields = [];
+    const params = [];
+
+    if (title) {
+        fields.push("title = ?");
+        params.push(title);
+    }
+
+    if (description) {
+        fields.push("description = ?");
+        params.push(description);
+    }
+
+    if (price) {
+        fields.push("price = ?");
+        params.push(price);
+    }
+
+    if (fields.length === 0) {
+        return reply.code(400).send({ error: "Nothing to update" });
+    }
+
+    const stmt = db.prepare(`UPDATE services SET ${fields.join(", ")} WHERE id = ?`);
+    params.push(id);
+    const info = stmt.run(...params);
+
+    if (info.chnges === 0) {
+        return reply.code(404).send({ error: "Services not found" });
+    }
+
+    return { status: "ok" };
+});
+
 fastify.patch('/api/services/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { title, description, price } = request.body;
     const id = request.params.id;
