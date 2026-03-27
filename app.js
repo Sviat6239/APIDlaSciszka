@@ -59,16 +59,20 @@ fastify.decorate('authenticate', async (request, reply) => {
 });
 
 //CRUD for admins
+
+//admins get method
 fastify.get('/api/admins', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM admins");
     return stmt.all();
 });
 
+//admins by id get method
 fastify.get('/api/admins/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM admins WHERE id = ?");
     return stmt.get(request.params.id);
 });
 
+//admins post method
 fastify.post('/api/admin', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { login, password } = request.body;
 
@@ -83,6 +87,7 @@ fastify.post('/api/admin', { preHandler: [fastify.authenticate] }, async (reques
     return { id: info.lastInsertRowid };
 });
 
+//admins by id put method
 fastify.put('/api/admins/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { login, password } = require.body;
     const id = require.params.id;
@@ -118,6 +123,7 @@ fastify.put('/api/admins/:id', { preHandler: [fastify.authenticate] }, async (re
 
 });
 
+//admins by id patch method
 fastify.patch('/api/admins/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { login, password } = request.body;
     const id = request.params.id;
@@ -152,6 +158,7 @@ fastify.patch('/api/admins/:id', { preHandler: [fastify.authenticate] }, async (
     return { status: "ok" };
 });
 
+//admins by id delete method
 fastify.delete("/api/admins/:id", { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const id = request.params.id;
     const stmt = db.prepare("DELETE FROM admins WHERE id = ?");
@@ -165,16 +172,20 @@ fastify.delete("/api/admins/:id", { preHandler: [fastify.authenticate] }, async 
 });
 
 //CRUD for customers
+
+//customers get method
 fastify.get('/api/customers', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM customers");
     return stmt.all();
 });
 
+//customers by id get method
 fastify.get('/api/customers/:id', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM customers WHERE id = ?");
     return stmt.get(request.params.id);
 })
 
+//customers post method
 fastify.post('/api/customers', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { name, surname, email, phone } = request.body;
 
@@ -188,6 +199,7 @@ fastify.post('/api/customers', { preHandler: [fastify.authenticate] }, async (re
     return { id: info.lastInsertRowid };
 });
 
+//customers by id put method
 fastify.put('/api/customers/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { name, surname, email, phone } = request.body;
     const id = request.params.id;
@@ -231,6 +243,7 @@ fastify.put('/api/customers/:id', { preHandler: [fastify.authenticate] }, async 
     return { status: "ok" };
 });
 
+//customers by id patch method
 fastify.patch('/api/customers/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { name, surname, email, phone } = request.body;
     const id = request.params.id;
@@ -274,6 +287,7 @@ fastify.patch('/api/customers/:id', { preHandler: [fastify.authenticate] }, asyn
     return { status: "ok" };
 });
 
+//customers by id delete method
 fastify.delete('/api/customers/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const id = request.params.id;
     const stmt = db.prepare("DELETE FROM customers WHERE id = ?");
@@ -287,16 +301,20 @@ fastify.delete('/api/customers/:id', { preHandler: [fastify.authenticate] }, asy
 });
 
 //CRUD for services
+
+//services get method
 fastify.get('/api/services', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM services");
     return stmt.all();
 });
 
+//services by id get method
 fastify.get('/api/services/:id', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM services WHERE id = ?");
     return stmt.get(request.params.id);
 });
 
+//services post method
 fastify.post('/api/services', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { title, description, price } = request.body;
 
@@ -310,6 +328,7 @@ fastify.post('/api/services', { preHandler: [fastify.authenticate] }, async (req
     return { id: info.lastInsertRowid };
 });
 
+//services by id put method
 fastify.put('/api/services/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { title, description, price } = request.body;
     const id = request.params.id;
@@ -347,6 +366,7 @@ fastify.put('/api/services/:id', { preHandler: [fastify.authenticate] }, async (
     return { status: "ok" };
 });
 
+//services by id patch method
 fastify.patch('/api/services/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { title, description, price } = request.body;
     const id = request.params.id;
@@ -384,6 +404,7 @@ fastify.patch('/api/services/:id', { preHandler: [fastify.authenticate] }, async
     return { status: "ok" };
 });
 
+//services by id delete method
 fastify.delete('/api/services/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const id = request.params.id;
     const stmt = db.prepare("DELETE FROM services WHERE id =?");
@@ -397,26 +418,32 @@ fastify.delete('/api/services/:id', { preHandler: [fastify.authenticate] }, asyn
 });
 
 //CRUD for products
+
+//products get method
 fastify.get('/api/products', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM products");
     return stmt.all();
 });
 
+//products by id get method
 fastify.get('/api/products/:id', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM products WHERE id = ?");
     return stmt.get(request.params.id);
 });
 
+//products by service_id get method
 fastify.get('/api/products/by-service/:service_id', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM products WHERE service_id = ?");
     return stmt.get(request.params.service_id);
 });
 
+//products by customer_id get method
 fastify.get('/api/products/by-customer/:customer_id', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM products WHERE customer_id = ?");
     return stmt.all(request.params.customer_id);
 });
 
+//products post method
 fastify.post('/api/products', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { service_id, title, description, customer_id } = request.body;
 
@@ -430,6 +457,7 @@ fastify.post('/api/products', { preHandler: [fastify.authenticate] }, async (req
     return { id: info.lastInsertRowid };
 });
 
+//products by id put method
 fastify.put('/api/products/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { service_id, title, description, customer_id } = request.body;
     const id = request.params.id;
@@ -471,6 +499,7 @@ fastify.put('/api/products/:id', { preHandler: [fastify.authenticate] }, async (
     return { status: "ok" };
 })
 
+//products by id patch method
 fastify.patch('/api/products/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { service_id, title, description, customer_id } = request.body;
     const id = request.params.id;
@@ -514,6 +543,7 @@ fastify.patch('/api/products/:id', { preHandler: [fastify.authenticate] }, async
     return { status: "ok" };
 });
 
+//products by id delete method
 fastify.delete('/api/products/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const id = request.params.id;
     const stmt = db.prepare("DELETE FROM products WHERE id =?");
@@ -527,11 +557,14 @@ fastify.delete('/api/products/:id', { preHandler: [fastify.authenticate] }, asyn
 });
 
 //CRUD for adding media to products
+
+//media by product_id get method
 fastify.get('/api/media/:product_id', async (request, reply) => {
     const stmt = db.prepare("SELECT * FROM media WHERE product_id = ?");
     return stmt.all(request.params.product_id);
 });
 
+//media post method
 fastify.post('/api/media', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { product_id, url, type } = req.body;
 
@@ -545,6 +578,7 @@ fastify.post('/api/media', { preHandler: [fastify.authenticate] }, async (reques
     return { id: info.lastInsertRowid };
 });
 
+//media by products_id put method
 fastify.put('/api/media/:product_id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { product_id, url, type } = request.body;
     const id = request.params.id;
@@ -582,6 +616,7 @@ fastify.put('/api/media/:product_id', { preHandler: [fastify.authenticate] }, as
 
 })
 
+//media by product_id patch method
 fastify.patch('/api/media/:product_id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { product_id, url, type } = reqгuest.body;
     const id = request.params.id;
@@ -620,6 +655,7 @@ fastify.patch('/api/media/:product_id', { preHandler: [fastify.authenticate] }, 
     return { status: "ok" };
 });
 
+//media by products_id delete method 
 fastify.delete('/api/media/:product_id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const id = request.params.id;
     const stmt = db.prepare("DELETE FROM media WHERE id = ?");
@@ -632,6 +668,7 @@ fastify.delete('/api/media/:product_id', { preHandler: [fastify.authenticate] },
     return { status: "deleted" };
 });
 
+//start web server
 const start = async () => {
     try {
         await fastify.listen({ port: 3000 })
